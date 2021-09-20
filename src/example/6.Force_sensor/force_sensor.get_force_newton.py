@@ -4,6 +4,7 @@ from spike.control import wait_for_seconds
 
 # Initialize the Force Sensor
 
+
 door_bell = ForceSensor('E')
 
 

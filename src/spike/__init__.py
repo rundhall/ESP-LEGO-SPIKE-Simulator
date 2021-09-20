@@ -1,4 +1,4 @@
-import machine,time,spike.settings,random
+import machine,time,spike.settings,spike.light_matrix,random,spike.left_button,spike.force_sensor,spike.distance_sensor
 
 class PrimeHub:
     PORT_A = "A"
@@ -11,8 +11,11 @@ class PrimeHub:
     
     def __init__(self):
         self.motion_sensor = Motion_sensor()
-        self.left_button = Left_button()
+        self.left_button = left_button.Left_button()
         self.speaker = Speaker()
+        self.i2c = machine.I2C(sda=machine.Pin(4), scl=machine.Pin(5))
+        self.light_matrix = light_matrix.Light_matrix(self.i2c)
+        
 
 class App:
     def __init__(self):
@@ -44,67 +47,7 @@ class App:
             self.speakerpin(1)
         if(settings.ISDEBUG):print("The played sound is started and finish time is unknowened")
     
-class Left_button:
 
-    def __init__(self):
-         self.buttonpin = machine.Pin(settings.BUTTONPIN, machine.Pin.IN, machine.Pin.PULL_UP)
-         self.buttonlast = 0
-    
-    def wait_until_pressed(self):
-        if(settings.ISDEBUG):print("wait_until_pressed: Waits until the button is pressed.")
-        if(settings.BUTTONSIMULATE):
-            while input("press 'p' to simulate a button press :") != "p":
-                pass
-        else:
-            while self.buttonpin.value()==1:
-                if(settings.ISDEBUG):print("push the button")
-        if(settings.ISDEBUG):print("button is pressed")
-    
-    def wait_until_released(self):
-        if(settings.ISDEBUG):print("wait_until_released: Waits until the button is released.")
-        if(settings.BUTTONSIMULATE):
-            while input("press 'r' to simulate a button release: ") != "r":
-                pass
-        else:
-            while self.buttonpin.value()==0:
-                if(settings.ISDEBUG):print("release the button")
-        if(settings.ISDEBUG):print("button is released")
-        
-    def was_pressed(self):
-        if(settings.ISDEBUG):print("Tests to see whether the button has been pressed since the last time this method called.")
-        if(settings.BUTTONSIMULATE):
-            readcharacter = input("press 'y' to simulate that the button was pressed 'n' if it was not (y/n): ")
-            if(readcharacter =="y"):
-                return True
-            if(readcharacter =="n"):
-                return False
-            
-        else:
-            if self.buttonpin.value()==0:
-                if self.buttonlast == 1:
-                    if(settings.ISDEBUG):print("button has been pressed since the last time")
-                    self.buttonlast = 0
-                    return True
-                else:
-                    return False
-            else:
-                self.buttonlast = 1
-                return False
-    
-    def is_pressed(self):
-        if(settings.ISDEBUG):print("Tests whether the button is pressed.")
-        if(settings.BUTTONSIMULATE):
-            readcharacter = input("press 'y' to simulate that the button is pressed 'n' if it is not (y/n): ")
-            if(readcharacter =="y"):
-                return True
-            if(readcharacter =="n"):
-                return False
-        else:
-            if self.buttonpin.value()==0:
-                if(settings.ISDEBUG):print("button is pressed")
-                return True
-            else:
-                return False
 
 class Speaker:
     def __init__(self):
@@ -159,131 +102,35 @@ class Motion_sensor:
     def get_yaw_angle(self):
         if(settings.ISDEBUG):print("get_yaw_angle: The Motion Sensor inside the Hub.")
         
+class ForceSensor:
+    def __init__(self,port):
+        self.force_sensor = force_sensor.ForceSensor(port)
+        
+    def get_force_newton(self):
+        return self.force_sensor.get_force_newton()
+    
+    def get_force_percentage(self):
+        return self.force_sensor.get_force_percentage()
+    
+    def is_pressed(self):
+        return self.force_sensor.is_pressed()
+    
+    def wait_until_pressed(self):
+        return self.force_sensor.wait_until_pressed()
+    
+    def wait_until_released(self):
+        return self.force_sensor.wait_until_released()
 
 class Motor:
     def __init__(self,port):
-        self.port = port
-        
-    def run_for_seconds(self,time,speed):
-        if(settings.ISDEBUG):print("Motor run for seconds: "+str(time)+str(speed)+self.port)
-        
-class ForceSensor:
-    def __init__(self,port):
-        self.port = port
-        self.adc = machine.ADC(settings.FORCESENSORPIN)
-        self.newton = 0
-        self.newtondirection = True
-        self.percentage = 0
-        self.percentagedirection = True
-    def remap(self,x, in_min, in_max, out_min, out_max):
-        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-    
-    def get_force_newton(self):
-        if(settings.ISDEBUG):print("Retrieves the measured force, in newtons.")
-        if(settings.FORCESENSORSIMULATE):
-            if(settings.FORCESENSORTYPE == "Random"):
-                self.newton = self.remap(random.getrandbits(8), 0, 255, 0, 10)
-            elif(settings.FORCESENSORTYPE == "Circular"):
-                if(self.newtondirection):
-                    self.newton += settings.FORCESENSORCHANGE
-                    if(self.newton > 9):
-                        self.newtondirection = False
-                else:
-                    self.newton -= settings.FORCESENSORCHANGE
-                    if(self.newton < 2):
-                        self.newtondirection = True
-            elif(settings.FORCESENSORTYPE == "Consol"):
-                self.newton = int(input("new Force Sensor reading in newton (0..10): "))
-                if self.newton>10 :
-                    self.newton = 10
-                if self.newton<0 :
-                    self.newton = 0
-            return int(self.newton)
-        else:
-            adcread = self.adc.read()
-            if(settings.ISDEBUG):print("ADC newtons value:"+str(adcread))
-            adcread = self.remap(adcread, 0, 1024, 0, 10)
-            return int(adcread)
-    
-    def get_force_percentage(self):
-        if(settings.ISDEBUG):print("Retrieves the measured force as a percentage of the maximum force.")
-        if(settings.FORCESENSORSIMULATE):
-            if(settings.FORCESENSORTYPE == "Random"):
-                self.percentage = self.remap(random.getrandbits(8), 0, 255, 0, 100)
-            elif(settings.FORCESENSORTYPE == "Circular"):
-                if(self.percentagedirection):
-                    self.percentage += settings.FORCESENSORCHANGE
-                    if(self.percentage > 99):
-                        self.percentagedirection = False
-                else:
-                    self.percentage -= settings.FORCESENSORCHANGE
-                    if(self.percentage < 2):
-                        self.percentagedirection = True
-            elif(settings.FORCESENSORTYPE == "Consol"):
-                self.percentage = int(input("new Force Sensor reading in percentage (0..100): "))
-                if self.percentage>100 :
-                    self.percentage = 100
-                if self.percentage<0 :
-                    self.percentage = 0
-            return int(self.percentage)
-        else:
-            adcread = self.adc.read()
-            if(settings.ISDEBUG):print("ADC percentage value:"+str(adcread))
-            adcread = self.remap(adcread, 0, 1024, 0, 100)
-            return int(adcread)
-        
-    def is_pressed(self):
-        if(settings.ISDEBUG):print("Tests whether the button on the sensor is pressed.")
-        if(settings.FORCESENSORSIMULATE):
-            if(settings.FORCESENSORTYPE == "Random"):
-                self.percentage = self.remap(random.getrandbits(8), 0, 255, 0, 100)  
-            elif(settings.FORCESENSORTYPE == "Circular"):
-                if(self.percentagedirection):
-                    self.percentage += settings.FORCESENSORCHANGE
-                    if(self.percentage > 99):
-                        self.percentagedirection = False
-                else:
-                    self.percentage -= settings.FORCESENSORCHANGE
-                    if(self.percentage < 2):
-                        self.percentagedirection = True
-            elif(settings.FORCESENSORTYPE == "Consol"):
-                readcharacter = input("press 'y' to simulate that the force sensor is pressed 'n' if it is not (y/n): ")
-                if(readcharacter =="y"):
-                    return True
-                if(readcharacter =="n"):
-                    return False
-            if(settings.ISDEBUG):print("Force sensor actual value: "+str(int(self.percentage))+" Switch value:" +str(settings.FORCESENSORSWITCH))
-            if self.percentage < settings.FORCESENSORSWITCH :
-                if(settings.ISDEBUG):print("force sensor button is pressed")
-                return True
-            else:
-                return False 
-        else:
-            if(settings.ISDEBUG):print("Retrieves the measured force as a percentage of the maximum force.")
-            adcread = self.adc.read()
-            adcread = self.remap(adcread, 0, 1024, 0, 100)
-            if adcread<settings.FORCESENSORSWITCH :
-                if(settings.ISDEBUG):print("force sensor button is pressed")
-                return True
-            else:
-                return False
+        self.motor = motor.Motor(port)
 
-    def wait_until_pressed(self):
-        if(settings.ISDEBUG):print("Waits until the Force Sensor is pressed.")
-        if(settings.FORCESENSORSIMULATE):
-            while input("press 'p' to simulate a Force Sensor press :") != "p":
-                pass
-        else:
-            while self.remap(adcread, 0, 1024, 0, 100) > settings.FORCESENSORSWITCH:
-                if(settings.ISDEBUG):print("push the Force Sensor")
-        if(settings.ISDEBUG):print("Force Sensor is pressed")
+class DistanceSensor:
+    def __init__(self,port):
+        self.distance_sensor = distance_sensor.DistanceSensor(port)
+        
+    def get_distance_cm(self,short_range=False):
+        return self.distance_sensor.get_distance_cm(short_range)
     
-    def wait_until_released(self):
-        if(settings.ISDEBUG):print("Waits until the Force Sensor is released.")
-        if(settings.BUTTONSIMULATE):
-            while input("press 'r' to simulate a Force Sensor release: ") != "r":
-                pass
-        else:
-            while self.remap(adcread, 0, 1024, 0, 100) < settings.FORCESENSORSWITCH:
-                if(settings.ISDEBUG):print("release the Force Sensor")
-        if(settings.ISDEBUG):print("Force Sensor is released")
+    def get_distance_inches(self,short_range=False):
+        return self.distance_sensor.get_distance_inches(short_range)
