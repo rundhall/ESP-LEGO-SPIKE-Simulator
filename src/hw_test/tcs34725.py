@@ -119,6 +119,8 @@ class TCS34725:
         y = -0.32466 * r + 1.57837 * g + -0.73191 * b
         z = -0.68202 * r + 0.77073 * g +  0.56332 * b
         d = x + y + z
+        if d==0:
+            d = 0.01
         n = (x / d - 0.3320) / (0.1858 - y / d)
         cct = 449.0 * n**3 + 3525.0 * n**2 + 6823.3 * n + 5520.33
         return cct, y
@@ -154,15 +156,42 @@ class TCS34725:
         self.i2c.writeto(self.address, b'\xe6')
 
 
-def html_rgb(data):
-    r, g, b, c = data
-    red = pow((int((r/c) * 256) / 255), 2.5) * 255
-    green = pow((int((g/c) * 256) / 255), 2.5) * 255
-    blue = pow((int((b/c) * 256) / 255), 2.5) * 255
-    return red, green, blue
+    def html_rgb(self,data):
+        r, g, b, c = data
+        red = pow((int((r/c) * 256) / 255), 2.5) * 255
+        green = pow((int((g/c) * 256) / 255), 2.5) * 255
+        blue = pow((int((b/c) * 256) / 255), 2.5) * 255
+        return red, green, blue
+    
+    #0 None,1'black',2'violet',3'blue',4'cyan',5'green',6'yellow',7'red',8'white']
+    def get_color_index(self,data):
+        red, green, blue, c = data
+        print("color_index",data)
+        if c < 4:
+            return 0 #None not enough light to know the color
+        '''red = pow((int((r/c) * 256) / 255), 2.5) * 255
+        green = pow((int((g/c) * 256) / 255), 2.5) * 255
+        blue = pow((int((b/c) * 256) / 255), 2.5) * 255'''
+        if blue > 20:
+            if green > 20:
+                if red > 20:
+                    return 8 #white r255,g255,b255
+                return 4 #cyan r0,g255,b255
+            else:
+                if red > 20:
+                    return 2  #violet r255,g0,b255
+                return 3 #blue r0,g0,b255
+        else:
+            if red > 20:
+                if green > 20:
+                    return 6  #yellow r255,g255,b0
+                return 7 #red r255,g0,b0
+        if green > 20:
+            return 5  #green r0,g255,b0
+        return 1 #black r0,g0,b0
 
-def html_hex(data):
-    r, g, b = html_rgb(data)
-    return "{0:02x}{1:02x}{2:02x}".format(int(r),
-                             int(g),
-                             int(b))
+    def html_hex(self,data):
+        r, g, b = self.html_rgb(data)
+        return "{0:02x}{1:02x}{2:02x}".format(int(r),
+                                 int(g),
+                                 int(b))

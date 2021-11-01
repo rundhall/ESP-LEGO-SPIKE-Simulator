@@ -5,7 +5,7 @@ import time
 import random
 
 
-pin = Pin(14, Pin.OUT)   # set GPIO0 to output to drive NeoPixels
+pin = Pin(0, Pin.OUT)   # set GPIO0 to output to drive NeoPixels
 np = NeoPixel(pin, 8)   # create NeoPixel driver on GPIO0 for 8 pixels
 
 random.seed(29)

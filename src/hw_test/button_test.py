@@ -1,4 +1,4 @@
-import time
+import time,machine
 BUTTONPIN = 0
 buttonpin = machine.Pin(BUTTONPIN, machine.Pin.IN, machine.Pin.PULL_UP)
 buttonlast = 0

@@ -1,12 +1,18 @@
 from machine import Pin, I2C
 import time, math
-import ssd1306
+import spike.ssd1306
+import spike.gfx
 
 # using default address 0x3C
-i2c = I2C(sda=Pin(4), scl=Pin(5))
-display = ssd1306.SSD1306_I2C(128, 64, i2c)
-
-
+i2c = I2C(sda=Pin(21), scl=Pin(22))
+oled_width = 128
+oled_height = 64
+display = spike.ssd1306.SSD1306_I2C(oled_width, oled_height, i2c)
+graphics = spike.gfx.GFX(oled_width, oled_height, display.pixel)
+display.fill(0)                         # fill entire screen with colour=0
+display.show()
+display.text('SZIASZTOK!', 20, 20, 1)    # draw some text at x=0, y=0, colour=1
+display.show()
 '''for v in range (69,129,1):
     display.fill_rect(52, 3, v, 14, 1)
     display.show()
@@ -58,12 +64,13 @@ HAPPY = [[1, 0, 0, 0, 1],
 for x in range (5):
     for y in range (5):
         if HAPPY[y][x]==1:
-            display.fill_rect(x*24, y*13, 22, 11, 1)   # draw a solid rectangle 10,10 to 107,43, colour=1
+            graphics.fill_rect(x*24, y*13, 22, 11, 1)   # draw a solid rectangle 10,10 to 107,43, colour=1
             print (str(x),str(y), "/",str(x*24),"/",str(y*13))
             display.show()
         time.sleep_ms(200)
     
 
+    
 '''display.fill(1)                         # fill entire screen with colour=0
 display.text('SZIASZTOK!', 20, 20, 0)    # draw some text at x=0, y=0, colour=1
 display.show()

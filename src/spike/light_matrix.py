@@ -1,22 +1,29 @@
-import ssd1306
-
+import spike.ssd1306, spike.gfx, machine
 
 class Light_matrix:
     #If ISDEBUG is true. then all modules send debug information through console
     ISDEBUG = True
-
+    
     #If LIGHTMATRIXSIMULATE is true then the displayed result is written to the console. If false the display is used.
-    LIGHTMATRIXSIMULATE = False
+    LIGHTMATRIXSIMULATE = True
+    
+    #The PIN for I2C sda
+    LIGHTMATRIXI2CSDAPIN = 21
+    #The PIN for I2C scl
+    LIGHTMATRIXI2CSCLPIN = 22
+    
+
+    
+    
     HEART = "09090:99999:99999:09990:00900"
     HEART_SMALL =  "00000:09090:09990:00900:00000"
     HAPPY =  "00000:09090:00000:90009:09990"
-    '''
-    
+    ASLEEP =  "00000:99099:00000:09990:00000"
+    '''  
     SMILE =  "00000:00000:00000:90009:09990"
     SAD =  "00000:09090:00000:09990:90009"
     CONFUSED =  "00000:09090:00000:09090:90909"
     ANGRY =  "90009:09090:00000:99999:90909"
-    ASLEEP =  "00000:99099:00000:09990:00000"
     SURPRISED =  "09090:00000:00900:09090:00900"
     SILLY =  "90009:00000:99999:00909:00999"
     FABULOUS =  "99999:99099:00000:09090:09990"
@@ -78,16 +85,21 @@ class Light_matrix:
     SNAKE =  "99000:99099:09090:09990:00000"
     ALL_CLOCKS =  "00900:00900:00900:00000:00000"
     ALL_ARROWS =  "00900:09990:90909:00900:00900"
+   ''' 
     
-    '''
 
-    def __init__(self, i2c) :
+    def __init__(self, ) :
          # using default address 0x3C
         if not self.LIGHTMATRIXSIMULATE:
-            self.display = ssd1306.SSD1306_I2C(128, 64, i2c)
+            try:
+                self.display = spike.ssd1306.SSD1306_I2C(128, 64, machine.SoftI2C(sda=machine.Pin(self.LIGHTMATRIXI2CSDAPIN), scl=machine.Pin(self.LIGHTMATRIXI2CSCLPIN)))
+                self.graphics = spike.gfx.GFX(128, 64, self.display.pixel)
+            except OSError:
+                print("ssd1306 display is not working or not connected. Connect it or set spike.light_matrix.py to simulator mode")
+                machine.soft_reset()
         if(self.ISDEBUG):print("Light Matrix is initialised in debug mode. Simulation:",self.LIGHTMATRIXSIMULATE, " change at spike.light_matrix.py ")
 
-    def show_image(self,image):
+    def show_image(self,image, brightness=100):
         #w, h = 5, 5
         #imagematrixRAM = [[0 for x in range(w)] for y in range(h)]
         if(self.ISDEBUG):print("Shows an image on the Light Matrix.")
@@ -174,7 +186,7 @@ class Light_matrix:
                 #if(self.ISDEBUG):print(splitimagematrix[y][x],"/",str(x),"/",str(y))
                 if splitimagematrix[y][x]=="9":
                     if not self.LIGHTMATRIXSIMULATE:
-                        self.display.fill_rect(x*24, y*13, 22, 11, 1)   # draw a solid rectangle 10,10 to 107,43, colour=1
+                        self.graphics.fill_rect(x*24, y*13, 22, 11, 1)   # draw a solid rectangle 10,10 to 107,43, colour=1
         
         if self.LIGHTMATRIXSIMULATE:
             ("Simulated Image showed name: ", image," image matrix:",imagematrix)
@@ -183,10 +195,19 @@ class Light_matrix:
         if(self.ISDEBUG):print("Image name: ", image," image matrix:",imagematrix)
     
     def off(self):
+        if(self.ISDEBUG):print("Light Matrix turned off")
         if self.LIGHTMATRIXSIMULATE :
             ("Simulated display turned off")
         else:
             self.display.fill(0)                         # fill entire screen with colour=0
+            self.display.show()
+    
+    def set_pixel(self,x, y, brightness=100):
+        if(self.ISDEBUG):print("Sets the brightness of one pixel (one of the 25 LEDs) on the Light Matrix. x:",str(x)," y:",str(y))
+        if self.LIGHTMATRIXSIMULATE :
+            ("Sets the brightness of one Simulated pixel (one of the 25 LEDs) on the Light Matrix.")
+        else:
+            self.graphics.fill_rect(x*24, y*13, 22, 11, 1)   # draw a solid rectangle 10,10 to 107,43, colour=1
             self.display.show()
         
 

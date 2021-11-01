@@ -1,6 +1,6 @@
-import time
+import time,machine
 import random
-speakerpin = machine.Pin(2, machine.Pin.OUT)
+speakerpin = machine.Pin(32, machine.Pin.OUT)
 speakerpin(1)
 
 for x in range(10):
