@@ -1,5 +1,5 @@
 import machine,time,spike.settings,spike.light_matrix,random,spike.status_light,spike.left_button,spike.right_button,spike.force_sensor,spike.distance_sensor,spike.app,spike.speaker,spike.color_sensor,spike.motion_sensor,spike.motor
-#import spike.motor_pair was removed because of a memory issue. ESP 32 WROOM not enough memory use WROVER with PSRAM. Or remove other modules to free RAM
+#import spike.motor_pair #was removed because of a memory issue. ESP 32 WROOM not enough memory use WROVER with PSRAM. Or remove other modules to free RAM
 class PrimeHub:
     PORT_A = "A"
     PORT_B = "B"
@@ -35,8 +35,8 @@ class ForceSensor:
     
     def wait_until_released(self):
         return self.force_sensor.wait_until_released()
-    
-'''#MotorPair was removed because of a memory issue. ESP 32 WROOM not enough memory use WROVER with PSRAM     
+'''    
+#MotorPair was removed because of a memory issue. ESP 32 WROOM not enough memory use WROVER with PSRAM     
 class MotorPair:
     def __init__(self,port1,port2):
         self.motor_pair = motor_pair.MotorPair(port1,port2)
