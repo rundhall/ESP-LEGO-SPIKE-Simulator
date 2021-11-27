@@ -40,4 +40,4 @@ Example
 from spike import MotorPair
 
 motor_pair = MotorPair('B', 'A')
-motor_pair.move_tank(10, 'cm', left_speed=25, right_speed=75)
+motor_pair.move_tank(10, 'cm', left_speed=100, right_speed=50)

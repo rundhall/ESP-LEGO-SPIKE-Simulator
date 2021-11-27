@@ -1,4 +1,4 @@
-import time,spike.settings
+import time
 
 class wait_for_seconds:
     

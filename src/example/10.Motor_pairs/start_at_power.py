@@ -24,8 +24,11 @@ One or both of the Ports do not have a motor connected or the motors could not b
 Example
 '''
 from spike import MotorPair, ColorSensor
-
+import time
 motor_pair = MotorPair('B', 'A')
 
-while True:
-    motor_pair.start_at_power(50, 0)
+motor_pair.start_at_power(70, 90)
+time.sleep_ms(2000) 
+# wait for something
+
+motor_pair.stop()

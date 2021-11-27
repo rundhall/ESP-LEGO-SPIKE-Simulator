@@ -1,12 +1,10 @@
 import spike.ssd1306, spike.gfx, machine
+import time
 
 class Light_matrix:
     #If ISDEBUG is true. then all modules send debug information through console
     ISDEBUG = True
-    
-    #If LIGHTMATRIXSIMULATE is true then the displayed result is written to the console. If false the display is used.
-    LIGHTMATRIXSIMULATE = True
-    
+
     #The PIN for I2C sda
     LIGHTMATRIXI2CSDAPIN = 21
     #The PIN for I2C scl
@@ -89,26 +87,22 @@ class Light_matrix:
     
 
     def __init__(self, ) :
-         # using default address 0x3C
-        if not self.LIGHTMATRIXSIMULATE:
-            try:
-                self.display = spike.ssd1306.SSD1306_I2C(128, 64, machine.SoftI2C(sda=machine.Pin(self.LIGHTMATRIXI2CSDAPIN), scl=machine.Pin(self.LIGHTMATRIXI2CSCLPIN)))
-                self.graphics = spike.gfx.GFX(128, 64, self.display.pixel)
-            except OSError:
-                print("ssd1306 display is not working or not connected. Connect it or set spike.light_matrix.py to simulator mode")
-                machine.soft_reset()
-        if(self.ISDEBUG):print("Light Matrix is initialised in debug mode. Simulation:",self.LIGHTMATRIXSIMULATE, " change at spike.light_matrix.py ")
+        # using default address 0x3C
+        try:
+            self.display = spike.ssd1306.SSD1306_I2C(128, 64, machine.SoftI2C(sda=machine.Pin(self.LIGHTMATRIXI2CSDAPIN), scl=machine.Pin(self.LIGHTMATRIXI2CSCLPIN)))
+            self.graphics = spike.gfx.GFX(128, 64, self.display.pixel)
+        except OSError:
+            print("ssd1306 display is not working or not connected. Connect it or change this file: spike.light_matrix.py")
+            machine.soft_reset()
+        if(self.ISDEBUG):print("Light_matrix->__init__(). Light Matrix is initialised in debug mode. Display data PIN:",self.LIGHTMATRIXI2CSDAPIN, ", clock PIN:",self.LIGHTMATRIXI2CSCLPIN, ". Change at spike.light_matrix.py ")
 
     def show_image(self,image, brightness=100):
         #w, h = 5, 5
         #imagematrixRAM = [[0 for x in range(w)] for y in range(h)]
-        if(self.ISDEBUG):print("Shows an image on the Light Matrix.")
+        if(self.ISDEBUG):print("Light_matrix->show_image(image=",image,", brightness=",brightness,"). Shows an image on the Light Matrix.")
         imagematrix = "default"
-        if self.LIGHTMATRIXSIMULATE:
-            print("display cleard")
-        else:
-            self.display.fill(0)                         # fill entire screen with colour=0
-            self.display.show()
+        self.display.fill(0)                         # fill entire screen with colour=0
+        self.display.show()
         
         if image == "HEART": imagematrix = self.HEART
         if image == "HEART_SMALL": imagematrix = self.HEART_SMALL
@@ -185,30 +179,38 @@ class Light_matrix:
             for y in range (5):
                 #if(self.ISDEBUG):print(splitimagematrix[y][x],"/",str(x),"/",str(y))
                 if splitimagematrix[y][x]=="9":
-                    if not self.LIGHTMATRIXSIMULATE:
-                        self.graphics.fill_rect(x*24, y*13, 22, 11, 1)   # draw a solid rectangle 10,10 to 107,43, colour=1
+                    self.graphics.fill_rect(x*24, y*13, 22, 11, 1)   # draw a solid rectangle 10,10 to 107,43, colour=1
         
-        if self.LIGHTMATRIXSIMULATE:
-            ("Simulated Image showed name: ", image," image matrix:",imagematrix)
-        else:
-            self.display.show()
+        self.display.show()
         if(self.ISDEBUG):print("Image name: ", image," image matrix:",imagematrix)
     
     def off(self):
-        if(self.ISDEBUG):print("Light Matrix turned off")
-        if self.LIGHTMATRIXSIMULATE :
-            ("Simulated display turned off")
-        else:
-            self.display.fill(0)                         # fill entire screen with colour=0
-            self.display.show()
+        if(self.ISDEBUG):print("Light_matrix->off(). Light Matrix turned off")
+        self.display.fill(0)                         # fill entire screen with colour=0
+        self.display.show()
     
     def set_pixel(self,x, y, brightness=100):
-        if(self.ISDEBUG):print("Sets the brightness of one pixel (one of the 25 LEDs) on the Light Matrix. x:",str(x)," y:",str(y))
-        if self.LIGHTMATRIXSIMULATE :
-            ("Sets the brightness of one Simulated pixel (one of the 25 LEDs) on the Light Matrix.")
-        else:
-            self.graphics.fill_rect(x*24, y*13, 22, 11, 1)   # draw a solid rectangle 10,10 to 107,43, colour=1
-            self.display.show()
+        if(self.ISDEBUG):print("Light_matrix->set_pixel(x=",x,", y=",y,", brightness=",brightness,"). Sets the brightness of one pixel (one of the 25 LEDs) on the Light Matrix. x:",str(x)," y:",str(y))
+        self.graphics.fill_rect(x*24, y*13, 22, 11, 1)   # draw a solid rectangle 10,10 to 107,43, colour=1
+        self.display.show()
         
+    def write(self,text):
+        if(self.ISDEBUG):print("Light_matrix->write(text=",text,"). Displays this text:",text," on the Light Matrix, text lengt:",len(text),", scrolling from right to left.")
+        self.display.fill(0)                         # fill entire screen with colour=0
+        self.display.show()
+
+        time.sleep_ms(1000)
+        avarageLength = len(text)
+        if avarageLength > 47:
+            if(self.ISDEBUG):print("avarage Length of text :",avarageLength," is higher then 47 an additional line is needed.")
+            self.display.text(text[48:64], 0, 48)
+        if avarageLength > 31:
+            if(self.ISDEBUG):print("avarage Length of text :",avarageLength," is higher then 31 an additional line is needed.")
+            self.display.text(text[32:48], 0, 32)
+        if avarageLength > 15:
+            if(self.ISDEBUG):print("avarage Length of text :",avarageLength," is higher then 15 an additional line is needed.")
+            self.display.text(text[16:32], 0, 16)
+        self.display.text(text[:16], 0, 0)
+        self.display.show()
 
 

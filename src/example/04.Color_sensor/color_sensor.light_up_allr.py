@@ -30,6 +30,7 @@ color_sensor.light_up_all()
 
 
 # Turn off the lights
-for x in range (250):
+for x in range (100):
     color_sensor.light_up_all(x)
     sleep(60)
+color_sensor.light_up_all(0)

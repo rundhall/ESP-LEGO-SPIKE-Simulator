@@ -1,7 +1,7 @@
 from spike import Motor
 from spike.control import wait_for_seconds
 # Initialize the motor
-motor = Motor('C')
+motor = Motor('A')
 # Rotate clockwise for 2 seconds at 75% speed
 motor.run_for_seconds(2.0, 75)
 
@@ -10,7 +10,7 @@ motor.run_for_seconds(6.5, -30)
 
 from spike import Motor
 # Initialize the motor
-motor = Motor('C')
+motor = Motor('A')
 # Rotate the motor 360 degrees clockwise
 motor.run_for_degrees(360)
 
@@ -20,7 +20,7 @@ motor.run_for_degrees(-360, 30)
 
 from spike import Motor
 # Initialize the motor
-motor = Motor('C')
+motor = Motor('A')
 # Place the motor in position "0," aligning the markers
 motor.run_to_position(0, 'shortest path', 75)
 

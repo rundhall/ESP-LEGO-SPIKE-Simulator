@@ -43,5 +43,5 @@ hub.status_light.on('white')
 sleep(1000)
 hub.status_light.on('test')
 sleep(1000)
-
+hub.status_light.off()
 

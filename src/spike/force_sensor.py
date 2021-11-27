@@ -4,8 +4,6 @@ import machine,time
 class ForceSensor:
     #If ISDEBUG is true. then all modules send debug information through console
     ISDEBUG = True
-    #If ISSIMULATION is true , if false it measures the ADC value of a potentiometer
-    ISSIMULATION = True
     #The PIN for Force Sensor (Potentiometer) ADC0
     FORCE_PIN_PORTA = 36
     FORCE_PIN_PORTB = 36
@@ -13,104 +11,58 @@ class ForceSensor:
     FORCE_PIN_PORTD = 36
     FORCE_PIN_PORTE = 36
     FORCE_PIN_PORTF = 36
-    #Define the type of the Force Sensor simulator. Values:
-    #Circular: it increases the return value by SIMULATORCHANGE, after reaching maximum value decreases by SIMULATORCHANGE every time it is called in while function it changes the value every second * SIMULATORTIME
-    #Random: it returns with a random number 
-    #Consol: it asks for a value from the console.
-    #SIMULATORTYPE = "Circular"
-    SIMULATORTYPE = "Random"
-    #SIMULATORTYPE = "Consol"
-    #The return value of the Force Sensor will change by this number
-    SIMULATORCHANGE = 10
-    #In Circular mode in wait functions this is the time in seconds between changes
-    SIMULATORTIME = 3
-    #If the measured, simulated value is higher than SIMULATORSWITCHMAX value then the while cycle is over or a press event occurs. (Inverse setting is possible)
+    #If the measured value is higher than SIMULATORSWITCHMAX value then the while cycle is over or a press event occurs. (Inverse setting is possible)
     SIMULATORSWITCHMAX=80
-    #If the measured, simulated value is lower than SIMULATORSWITCHMAX value then the while cycle is over or a press event occurs. (Inverse setting is possible)
+    #If the measured value is lower than SIMULATORSWITCHMAX value then the while cycle is over or a press event occurs. (Inverse setting is possible)
     SIMULATORSWITCHMIN=0
+    
     
     def __init__(self,port):
         self.port = port
-        if not self.ISSIMULATION:
-            if port == 'A': self.adc = machine.ADC(machine.Pin(self.FORCE_PIN_PORTA))
-            if port == 'B': self.adc = machine.ADC(machine.Pin(self.FORCE_PIN_PORTB))
-            if port == 'C': self.adc = machine.ADC(machine.Pin(self.FORCE_PIN_PORTC))
-            if port == 'D': self.adc = machine.ADC(machine.Pin(self.FORCE_PIN_PORTD))
-            if port == 'E': self.adc = machine.ADC(machine.Pin(self.FORCE_PIN_PORTE))
-            if port == 'F': self.adc = machine.ADC(machine.Pin(self.FORCE_PIN_PORTF))
-            self.adc.atten(machine.ADC.ATTN_11DB)       #Full range: 3.3v
+        forceLEDpin = self.FORCE_PIN_PORTA
+        if port == 'A': forceLEDpin = self.FORCE_PIN_PORTA
+        if port == 'B': forceLEDpin = self.FORCE_PIN_PORTB
+        if port == 'C': forceLEDpin = self.FORCE_PIN_PORTC
+        if port == 'D': forceLEDpin = self.FORCE_PIN_PORTD
+        if port == 'E': forceLEDpin = self.FORCE_PIN_PORTE
+        if port == 'F': forceLEDpin = self.FORCE_PIN_PORTF
+        self.adc = machine.ADC(machine.Pin(forceLEDpin))
+        self.FORCE_PIN_PORTA
+        self.adc.atten(machine.ADC.ATTN_11DB)       #Full range: 3.3v
         self.newton = 0
-        self.newton_direction = True
         self.percentage = 0
-        self.percentage_direction = True
         self.simulator = simulator.Simulator()
-        if(self.ISDEBUG):print("Force sensor is initialised in debug mode. Simulation:",self.ISSIMULATION, " sensor type:",self.SIMULATORTYPE ," change at spike.force_sensor.py ")
+        if(self.ISDEBUG):print("ForceSensor->__init__(port=",port,"). Force sensor is initialised in debug mode. Force sensor PIN:",forceLEDpin,", Switching threshold: ",self.SIMULATORSWITCHMAX,"  Change at spike.force_sensor.py ")
 
-    def get_new_measured_value(self,multipier=1):
-        if not self.ISSIMULATION:
-            return self.adc.read()
-        else:
-            return None
-    
-    def remap(self,x, in_min, in_max, out_min, out_max):
-        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-    
     def get_force_newton(self):
-        if(self.ISDEBUG):print("Retrieves the measured force, in newtons.")
-        self.newton, self.newton_direction = self.simulator.get_new_value(issimulation=self.ISSIMULATION,
-                                                                     simulationtype=self.SIMULATORTYPE,
+        if(self.ISDEBUG):print("ForceSensor->get_force_newton(). Retrieves the measured force, in newtons.")
+        self.newton = self.simulator.get_new_value(
                                                                      isdebug=self.ISDEBUG,
-                                                                     actualvalue= self.newton,
-                                                                     newreading= self.get_new_measured_value(),
+                                                                     newreading= self.adc.read(),
                                                                      minvalue= 0,
                                                                      maxvalue= 10,
-                                                                     name= "force sensor newton",
-                                                                     direction= self.newton_direction,
-                                                                     change= self.SIMULATORCHANGE,
-                                                                     iswait= False,
-                                                                     switch_min= self.SIMULATORSWITCHMIN,
-                                                                     switch_max=self.SIMULATORSWITCHMAX,
-                                                                     isextern= False,
                                                                      minreading=0,
                                                                      maxreading=4095)
         return self.newton
     
     def get_force_percentage(self):
-        if(self.ISDEBUG):print("Retrieves the measured force, in percentages.")
-        self.percentage, self.percentage_direction = self.simulator.get_new_value(issimulation=self.ISSIMULATION,
-                                                                     simulationtype=self.SIMULATORTYPE,
+        if(self.ISDEBUG):print("ForceSensor->get_force_percentage(). Retrieves the measured force, in percentages.")
+        self.percentage = self.simulator.get_new_value(
                                                                      isdebug=self.ISDEBUG,
-                                                                     actualvalue= self.percentage,
-                                                                     newreading= self.get_new_measured_value(),
+                                                                     newreading= self.adc.read(),
                                                                      minvalue= 0,
                                                                      maxvalue= 100,
-                                                                     name= "force sensor percentage",
-                                                                     direction= self.percentage_direction,
-                                                                     change= self.SIMULATORCHANGE,
-                                                                     iswait= False,
-                                                                     switch_min= self.SIMULATORSWITCHMIN,
-                                                                     switch_max=self.SIMULATORSWITCHMAX,
-                                                                     isextern= False,
                                                                      minreading=0,
                                                                      maxreading=4095)
         return self.percentage
         
     def is_pressed(self):
-        if(self.ISDEBUG):print("Tests whether the button on the force sensor is pressed.")
-        self.percentage, self.percentage_direction = self.simulator.get_new_value(issimulation=self.ISSIMULATION,
-                                                                     simulationtype=self.SIMULATORTYPE,
+        if(self.ISDEBUG):print("ForceSensor->is_pressed(). Tests whether the button on the force sensor is pressed.")
+        self.percentage = self.simulator.get_new_value(
                                                                      isdebug=self.ISDEBUG,
-                                                                     actualvalue= self.percentage,
-                                                                     newreading= self.get_new_measured_value(),
+                                                                     newreading= self.adc.read(),
                                                                      minvalue= 0,
                                                                      maxvalue= 100,
-                                                                     name= "force sensor percentage",
-                                                                     direction= self.percentage_direction,
-                                                                     change= self.SIMULATORCHANGE,
-                                                                     iswait= False,
-                                                                     switch_min= self.SIMULATORSWITCHMIN,
-                                                                     switch_max=self.SIMULATORSWITCHMAX,
-                                                                     isextern= False,
                                                                      minreading=0,
                                                                      maxreading=4095)
         if self.percentage < self.SIMULATORSWITCHMAX :
@@ -121,28 +73,14 @@ class ForceSensor:
                 return False
 
     def wait_until_pressed(self):
-        if(self.ISDEBUG):print("Waits until the Force Sensor is pressed.")
+        if(self.ISDEBUG):print("ForceSensor->wait_until_pressed(). Waits until the Force Sensor is pressed.")
         runwhile = True
         while runwhile:
-            if not self.ISSIMULATION:
-                newreading = self.adc.read()
-            else:
-                newreading = None
-            self.percentage, self.percentage_direction = self.simulator.get_new_value(   issimulation=self.ISSIMULATION,
-                                                                     simulationtype=self.SIMULATORTYPE,
+            self.percentage = self.simulator.get_new_value(
                                                                      isdebug=self.ISDEBUG,
-                                                                     actualvalue= self.percentage,
-                                                                     newreading= newreading,
+                                                                     newreading= self.adc.read(),
                                                                      minvalue= 0,
                                                                      maxvalue= 100,
-                                                                     name= "distance closer than",
-                                                                     direction= self.percentage_direction,
-                                                                     change= self.SIMULATORCHANGE,
-                                                                     iswait= True,
-                                                                     switch_min= self.SIMULATORSWITCHMIN,
-                                                                     switch_max= self.SIMULATORSWITCHMAX,
-                                                                     isextern= True,
-                                                                     time_period= self.SIMULATORTIME,
                                                                      minreading=0,
                                                                      maxreading=4095)
             if(self.ISDEBUG):print("Do changes at force sensor new reading:", str(self.percentage), " to exit it should be lower then:", self.SIMULATORSWITCHMIN , " or it should be higher then:", self.SIMULATORSWITCHMAX )
@@ -152,28 +90,14 @@ class ForceSensor:
                 time.sleep_ms(500)
     
     def wait_until_released(self):
-        if(self.ISDEBUG):print("Waits until the Force Sensor is released.")
+        if(self.ISDEBUG):print("ForceSensor->wait_until_released(). Waits until the Force Sensor is released.")
         runwhile = True
         while runwhile:
-            if not self.ISSIMULATION:
-                newreading = self.adc.read()
-            else:
-                newreading = None
-            self.percentage, self.percentage_direction = self.simulator.get_new_value(   issimulation=self.ISSIMULATION,
-                                                                     simulationtype=self.SIMULATORTYPE,
+            self.percentage = self.simulator.get_new_value(   
                                                                      isdebug=self.ISDEBUG,
-                                                                     actualvalue= self.percentage,
-                                                                     newreading= self.get_new_measured_value(),
+                                                                     newreading= self.adc.read(),
                                                                      minvalue= 0,
                                                                      maxvalue= 100,
-                                                                     name= "distance closer than",
-                                                                     direction= self.percentage_direction,
-                                                                     change= self.SIMULATORCHANGE,
-                                                                     iswait= True,
-                                                                     switch_min= self.SIMULATORSWITCHMIN,
-                                                                     switch_max= self.SIMULATORSWITCHMAX,
-                                                                     isextern= False,
-                                                                     time_period= self.SIMULATORTIME,
                                                                      minreading=0,
                                                                      maxreading=4095)
             if(self.ISDEBUG):print("Do changes at force sensor new reading:", str(self.percentage), " to exit it should be higher or equal then:", self.SIMULATORSWITCHMIN , " or it should be lower or equal then:", self.SIMULATORSWITCHMAX )

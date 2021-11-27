@@ -47,4 +47,6 @@ motor_pair = MotorPair('B', 'A')
 
 # turn a Driving Base 180 degrees in place (if wheels are 8.1 cm apart)
 
-motor_pair.move(8.1 * math.pi / 2, 'cm', steering=100)
+#motor_pair.move(8.1 * math.pi / 2, 'cm', steering=-100)
+
+motor_pair.move(180, 'degrees', steering=-30)

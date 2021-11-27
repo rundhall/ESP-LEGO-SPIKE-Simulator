@@ -1,5 +1,6 @@
-import machine,time,spike.settings,spike.light_matrix,random,spike.status_light,spike.left_button,spike.right_button,spike.force_sensor,spike.distance_sensor,spike.app,spike.speaker,spike.color_sensor,spike.motion_sensor,spike.motor
-#import spike.motor_pair #was removed because of a memory issue. ESP 32 WROOM not enough memory use WROVER with PSRAM. Or remove other modules to free RAM
+import machine,time,spike.light_matrix,random,spike.status_light,spike.left_button,spike.right_button,spike.force_sensor,spike.distance_sensor,spike.app,spike.speaker,spike.color_sensor,spike.motion_sensor,spike.motor
+import spike.motor_pair
+#was removed because of a memory issue. ESP 32 WROOM not enough memory use WROVER with PSRAM. Or remove other modules to free RAM
 class PrimeHub:
     PORT_A = "A"
     PORT_B = "B"
@@ -35,7 +36,7 @@ class ForceSensor:
     
     def wait_until_released(self):
         return self.force_sensor.wait_until_released()
-'''    
+
 #MotorPair was removed because of a memory issue. ESP 32 WROOM not enough memory use WROVER with PSRAM     
 class MotorPair:
     def __init__(self,port1,port2):
@@ -64,8 +65,16 @@ class MotorPair:
 
     def stop(self):
         return self.motor_pair.stop()
-'''
+    
+    def move(self, amount, unit='cm', steering=0, speed=None):
+        return self.motor_pair.move(amount, unit, steering, speed)
 
+    def move_tank(self,amount, unit='cm', left_speed=None, right_speed=None):
+        return self.motor_pair.move_tank(amount, unit, left_speed, right_speed)
+    
+    def start_at_power(self,power, steering=0):
+        return self.motor_pair.start_at_power(power, steering)
+    
 class Motor:
     def __init__(self,port):
         self.motor = motor.Motor(port)
@@ -111,6 +120,9 @@ class Motor:
     
     def start(self,speed=None):
         return self.motor.start(speed)
+
+    def start_at_power(self,power=100):
+        return self.motor.start_at_power(power)
 
     def stop(self):
         return self.motor.stop()

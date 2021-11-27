@@ -2,10 +2,12 @@ from spike import PrimeHub
 from spike.control import wait_for_seconds
 
 hub = PrimeHub()
-
-for x in range(200):
-    wait_for_seconds(0.5)
+szamlalo = 0
+while True:
+    wait_for_seconds(0.2)
+    
     if hub.left_button.is_pressed():
-        print('left button is pressed')
+        print('Jobb gomb '+str(szamlalo))
+        szamlalo=szamlalo+1
     if hub.right_button.is_pressed():
-        print('right button is pressed')
+        print('Ball gomb')

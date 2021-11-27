@@ -3,15 +3,13 @@ import machine,random,time
 class Motor:
     #If ISDEBUG is true. then all modules send debug information through console
     ISDEBUG = True
-    #If ISSIMULATION is true then the status of the motor is stored in variables and written to the console. If false a continuous servo motor is controlled by MOTORPIN with pwm signals
-    ISSIMULATION = True
     #The PIN for Motor
-    MOTORPIN_PORTA = 25
-    MOTORPIN_PORTB = 25
-    MOTORPIN_PORTC = 25
-    MOTORPIN_PORTD = 25
-    MOTORPIN_PORTE = 25
-    MOTORPIN_PORTF = 25
+    MOTORPIN_PORTA = 33
+    MOTORPIN_PORTB = 33
+    MOTORPIN_PORTC = 33
+    MOTORPIN_PORTD = 33
+    MOTORPIN_PORTE = 33
+    MOTORPIN_PORTF = 33
     #pwm frequency usually 50 Hz is working for servo motors, possible range 30...100.
     MOTOR_PWM_FREQUENCY = 50
     
@@ -26,33 +24,46 @@ class Motor:
         self.direction = 'clockwise'
         self.speed = None
         self.servo = None
-        if not self.ISSIMULATION:
-            if port == 'A': self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTA),freq=self.MOTOR_PWM_FREQUENCY)
-            if port == 'B': self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTB),freq=self.MOTOR_PWM_FREQUENCY)
-            if port == 'C': self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTC),freq=self.MOTOR_PWM_FREQUENCY)
-            if port == 'D': self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTD),freq=self.MOTOR_PWM_FREQUENCY)
-            if port == 'E': self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTE),freq=self.MOTOR_PWM_FREQUENCY)
-            if port == 'F': self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTF),freq=self.MOTOR_PWM_FREQUENCY)
-    
+        servoPIN = self.MOTORPIN_PORTA
+        if port == 'A':
+            self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTA),freq=self.MOTOR_PWM_FREQUENCY)
+            servoPIN = self.MOTORPIN_PORTA
+        if port == 'B':
+            self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTB),freq=self.MOTOR_PWM_FREQUENCY)
+            servoPIN = self.MOTORPIN_PORTB
+        if port == 'C':
+            self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTC),freq=self.MOTOR_PWM_FREQUENCY)
+            servoPIN = self.MOTORPIN_PORTC
+        if port == 'D':
+            self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTD),freq=self.MOTOR_PWM_FREQUENCY)
+            servoPIN = self.MOTORPIN_PORTD
+        if port == 'E':
+            self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTE),freq=self.MOTOR_PWM_FREQUENCY)
+            servoPIN = self.MOTORPIN_PORTE
+        if port == 'F':
+            self.servo = machine.PWM(machine.Pin(self.MOTORPIN_PORTF),freq=self.MOTOR_PWM_FREQUENCY)
+            servoPIN = self.MOTORPIN_PORTF
+        if(self.ISDEBUG):print("Motor->__init__(port=",port,"). Motor is initialised in debug mode. Motor PIN:",servoPIN,", Motor PWM:",self.MOTOR_PWM_FREQUENCY ," change at motor.py ")
+
+
     def set_degrees_counted(self,degrees_counted):
-        if(self.ISDEBUG):print("motor set_degrees_counted(). Sets the number of degrees counted to the desired value. New value degrees_counted:",str(degrees_counted))
+        if(self.ISDEBUG):print("Motor->set_degrees_counted(degrees_counted=",str(degrees_counted),"). Sets the number of degrees counted to the desired value. ")
         self.degrees_counted = degrees_counted
         
     def set_default_speed(self,default_speed):
-        if(self.ISDEBUG):print("motor set_default_speed(). Sets the default motor speed. New value default_speed:",str(default_speed))
+        if(self.ISDEBUG):print("Motor->set_default_speed(default_speed=",str(default_speed),"). Sets the default motor speed.")
         self.default_speed = default_speed
         
     def set_stop_action(self,action):
-        if(self.ISDEBUG):print("motor set_stop_action(). Sets the default behavior when a motor stops. New value action:",str(action))
+        if(self.ISDEBUG):print("Motor->set_stop_action(action=",str(action),"). Sets the default behavior when a motor stops. ")
         self.action = action
         
     def set_stall_detection(self,stop_when_stalled):
-        if(self.ISDEBUG):print("motor set_stall_detection(). Turns stall detection on or off. New value stop_when_stalled:",str(stop_when_stalled))
+        if(self.ISDEBUG):print("Motor->set_stall_detection(stop_when_stalled=",str(stop_when_stalled),"). Turns stall detection on or off. ")
         self.stop_when_stalled = stop_when_stalled
         
         #input the relatave turn the old absolute position and a speed
     def handel_servo(self,
-                     issimulation=True,
                      isdebug=True,
                      relative_turn=0,
                      old_absolute_position=0,
@@ -98,18 +109,18 @@ class Motor:
                           " speed:",str(speed),
                           " duty:",str(duty),
                           " timer:",str(timer))
-        if not issimulation: servo.duty(duty)
+        servo.duty(duty)
         if run_time_period == 0:
             time.sleep_ms(int(timer))
         else:
             time.sleep_ms(int(run_time_period*1000))
-        if not issimulation: servo.duty(0)
+        servo.duty(0)
         return new_absolute_position
         
                      
 
     def run_to_position(self,degrees, direction='Shortest path', speed=None):
-        if(self.ISDEBUG):print("motor run_to_position(). Runs the motor to an absolute position. New values degrees:",str(degrees)," direction:",str(direction)," speed:",str(speed))
+        if(self.ISDEBUG):print("Motor->run_to_position(degrees=",str(degrees),",direction=",str(direction),",speed=",str(speed),"). Runs the motor to an absolute position. ")
         self.degrees = degrees
         self.direction = direction
         self.speed = speed
@@ -143,7 +154,7 @@ class Motor:
                 relative_turn = degrees-self.position
         if degrees == self.position:
             relative_turn = 0
-        self.position = self.handel_servo(issimulation=self.ISSIMULATION,
+        self.position = self.handel_servo(
                      isdebug=self.ISDEBUG,
                      relative_turn = relative_turn,
                      old_absolute_position =self.position,
@@ -153,10 +164,10 @@ class Motor:
                      servo=self.servo)
         
     def run_to_degrees_counted(self,degrees, speed=None):
-        if(self.ISDEBUG):print("motor run_to_degrees_counted(). Runs the motor until the number of degrees counted is equal to the value. New values degrees:",str(degrees)," speed:",str(speed))
+        if(self.ISDEBUG):print("Motor->run_to_degrees_counted(degrees=",str(degrees),", speed=",str(speed),"). Runs the motor until the number of degrees counted is equal to the value. ")
         self.degrees = degrees
         self.speed = speed
-        self.position = self.handel_servo(issimulation=self.ISSIMULATION,
+        self.position = self.handel_servo(
                      isdebug=self.ISDEBUG,
                      relative_turn = degrees,
                      old_absolute_position =self.position,
@@ -166,10 +177,10 @@ class Motor:
                      servo=self.servo)
     
     def run_for_degrees(self,degrees, speed=None):
-        if(self.ISDEBUG):print("motor run_for_degrees(). Runs the motor for a specified number of degrees. New values degrees:",str(degrees)," speed:",str(speed))
+        if(self.ISDEBUG):print("Motor->run_for_degrees(degrees=",str(degrees),", speed=",str(speed),"). Runs the motor for a specified number of degrees.")
         self.degrees = degrees
         self.speed = speed
-        self.position = self.handel_servo(issimulation=self.ISSIMULATION,
+        self.position = self.handel_servo(
                      isdebug=self.ISDEBUG,
                      relative_turn = degrees,
                      old_absolute_position =self.position,
@@ -179,11 +190,11 @@ class Motor:
                      servo=self.servo)
 
     def run_for_rotations(self,rotations, speed=None):
-        if(self.ISDEBUG):print("motor run_for_rotations(). Runs the motor for a specified number of rotations. New values rotations:",str(rotations)," speed:",str(speed))
+        if(self.ISDEBUG):print("Motor->run_for_rotations(rotations=",str(rotations),", speed=",str(speed),"). Runs the motor for a specified number of rotations. ")
         self.rotations = rotations
         self.speed = speed
         self.degrees = rotations*360
-        self.position = self.handel_servo(issimulation=self.ISSIMULATION,
+        self.position = self.handel_servo(
                      isdebug=self.ISDEBUG,
                      relative_turn = self.degrees,
                      old_absolute_position =self.position,
@@ -193,10 +204,10 @@ class Motor:
                      servo=self.servo)
                
     def run_for_seconds(self,seconds, speed=None):
-        if(self.ISDEBUG):print("motor run_for_seconds(). Runs the motor for a specified number of seconds. New values seconds:",str(seconds)," speed:",str(speed))
+        if(self.ISDEBUG):print("Motor->run_for_seconds(seconds=",str(seconds),", speed=",str(speed),"). Runs the motor for a specified number of seconds. ")
         self.seconds = seconds
         self.speed = speed
-        self.position = self.handel_servo(issimulation=self.ISSIMULATION,
+        self.position = self.handel_servo(
              isdebug=self.ISDEBUG,
              relative_turn = self.position,
              old_absolute_position = self.position,
@@ -208,23 +219,23 @@ class Motor:
         
         
     def get_speed(self):
-        if(self.ISDEBUG):print("motor get_speed(). Retrieves the motor speed. Stored value:",str(self.speed))
+        if(self.ISDEBUG):print("Motor->get_speed(). Retrieves the motor speed. Stored value:",str(self.speed))
         return self.speed
     
     def get_position(self):
-        if(self.ISDEBUG):print("motor get_position(). Retrieves the motor position. Stored value:",str(self.position))
+        if(self.ISDEBUG):print("Motor->get_position(). Retrieves the motor position. Stored value:",str(self.position))
         return self.position
     
     def get_degrees_counted(self):
-        if(self.ISDEBUG):print("motor get_degrees_counted(). Retrieves the motor degrees_counted. Stored value:",str(self.degrees_counted))
+        if(self.ISDEBUG):print("Motor->get_degrees_counted(). Retrieves the motor degrees_counted. Stored value:",str(self.degrees_counted))
         return self.degrees_counted    
 
     def get_default_speed (self):
-        if(self.ISDEBUG):print("motor get_default_speed(). Retrieves the motor default_speed. Stored value:",str(self.default_speed))
+        if(self.ISDEBUG):print("Motor->get_default_speed(). Retrieves the motor default_speed. Stored value:",str(self.default_speed))
         return self.default_speed
     
     def start(self,speed=None):
-        if(self.ISDEBUG):print("motor start(). Starts running the motor at a specified speed. New values speed:",str(speed))
+        if(self.ISDEBUG):print("Motor->start(speed=",speed,"). Starts running the motor at a specified speed. ")
         
         if self.direction=='clockwise':
             isclockwise = True
@@ -243,18 +254,39 @@ class Motor:
             duty = 80 + self.speed
         if self.speed == 0:
             duty = 0
-        if not self.ISSIMULATION: self.servo.duty(duty)
+        self.servo.duty(duty)
         if(self.ISDEBUG):print("duty:",str(duty)," speed:",str(self.speed)," self.direction:",str(self.direction))
         
 
+    def start_at_power(self,power=100):
+        if(self.ISDEBUG):print("Motor->start_at_power(power=",str(power),"). Starts rotating the motor at a specified power level. ")
+        
+        if power > 0:
+            isclockwise = True
+        else:
+            isclockwise = False
+        duty = 0
+        self.speed = abs(power)
+        if isclockwise:
+            duty = 100 - int(self.speed)
+            if duty < 2:
+                duty = 2
+        else:
+            duty = 80 + self.speed
+        if self.speed == 0:
+            duty = 0
+        self.servo.duty(duty)
+        if(self.ISDEBUG):print("duty:",str(duty)," speed:",str(self.speed)," self.direction:",str(self.direction))
+
+
     def stop(self):
-        if(self.ISDEBUG):print("motor stop(). Stops the motor.")
-        if not self.ISSIMULATION: self.servo.duty(0)
+        if(self.ISDEBUG):print("Motor->stop(). Stops the motor.")
+        self.servo.duty(0)
         
     def was_interrupted(self):
-        if(self.ISDEBUG):print("motor was_interrupted(). Tests whether the motor was interrupted.")
+        if(self.ISDEBUG):print("Motor->was_interrupted(). Tests whether the motor was interrupted.")
         return False
     
     def was_stalled(self):
-        if(self.ISDEBUG):print("motor was_stalled(). Tests whether the motor was stalled.")
+        if(self.ISDEBUG):print("Motor->was_stalled(). Tests whether the motor was stalled.")
         return False

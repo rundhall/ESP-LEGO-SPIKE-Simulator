@@ -36,3 +36,4 @@ for x in range (10):
     
 distance_sensor.light_up_all(100)
 color_sensor.light_up_all(200)
+distance_sensor.light_up_all(0)

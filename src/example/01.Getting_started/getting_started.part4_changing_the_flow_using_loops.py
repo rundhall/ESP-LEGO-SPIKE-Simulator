@@ -4,7 +4,7 @@ force_sensor = ForceSensor('B')
 motor = Motor('C')
 count = 0
 # You can press the Force Sensor 5 times 
-motor.set_default_speed(25)
+motor.set_default_speed(100)
 while count < 5:
 	force_sensor.wait_until_pressed()
 	motor.start()

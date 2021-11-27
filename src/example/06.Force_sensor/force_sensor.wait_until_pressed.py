@@ -9,8 +9,9 @@ force_sensor = ForceSensor('A')
 while True:
     force_sensor.wait_until_pressed()
     # do something, for example,
-    hub.speaker.start_beep()
     print('pressed')
+    hub.speaker.start_beep()
+    
     time.sleep_ms(1000)
     force_sensor.wait_until_released()
     # do something, for example,
