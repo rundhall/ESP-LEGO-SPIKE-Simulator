@@ -1,4 +1,4 @@
-# ESP-LEGO-SPIKE-Simulator
+# ESP-32 based LEGO SPIKE simulator in micropyton environment
 ESP-32 based LEGO SPIKE simulator in micropyton environment
 
 # 1.	Introduction
