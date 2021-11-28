@@ -209,28 +209,31 @@ class Motor:
         self.rotations = rotations
         self.speed = speed
         self.degrees = rotations*360
-        self.position = self.handel_servo(
+        self.position,timer,duty = self.handel_servo(
                      isdebug=self.ISDEBUG,
                      relative_turn = self.degrees,
                      old_absolute_position =self.position,
                      run_time_period = 0,
                      speed=self.speed,
-                     default_speed=self.default_speed,
-                     servo=self.servo)
+                     default_speed=self.default_speed)
+        self.servo.duty(duty)
+        time.sleep_ms(int(timer))
+        self.servo.duty(0)
                
     def run_for_seconds(self,seconds, speed=None):
         if(self.ISDEBUG):print("Motor->run_for_seconds(seconds=",str(seconds),", speed=",str(speed),"). Runs the motor for a specified number of seconds. ")
         self.seconds = seconds
         self.speed = speed
-        self.position = self.handel_servo(
+        self.position,timer,duty = self.handel_servo(
              isdebug=self.ISDEBUG,
              relative_turn = self.position,
              old_absolute_position = self.position,
              run_time_period = seconds,
              speed=self.speed,
-             default_speed=self.default_speed,
-             servo=self.servo)
-        
+             default_speed=self.default_speed)
+        self.servo.duty(duty)
+        time.sleep_ms(int(timer))
+        self.servo.duty(0)
         
         
     def get_speed(self):
