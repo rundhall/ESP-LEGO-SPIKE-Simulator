@@ -12,11 +12,3 @@ while count < 5:
 	motor.stop()
 	count = count + 1
 
-
-count = 0
-while count < 5:
-	# Measure the force in newtons or as a percentage
-	percentage = force_sensor.get_force_percentage()
-	# Use the measured force to start the motor
-	motor.start(percentage)
-	count = count + 1

@@ -4,7 +4,7 @@ hub = PrimeHub()
 app = App()
 
 count = 0
-while count < 5:
+while count < 10:
 	orientation = hub.motion_sensor.wait_for_new_orientation()
 	if orientation == 'front':
 		hub.light_matrix.show_image('ASLEEP')
@@ -15,10 +15,3 @@ while count < 5:
 	count = count + 1
 	print('count_a', str(count))
 
-
-count = 0
-while count < 5:
-	angle = abs(hub.motion_sensor.get_pitch_angle()) * 2
-	hub.light_matrix.show_image('HAPPY', angle)
-	count = count + 1
-	print('count_b', str(count)) 

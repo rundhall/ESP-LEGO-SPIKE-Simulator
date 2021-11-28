@@ -15,4 +15,4 @@ motor_pair.move(2, 'seconds')
 motor_pair.move_tank(10, 'cm', left_speed=100, right_speed=100)
 
 # Move in the other direction for 2 seconds
-motor_pair.move_tank(1, 'rotations', left_speed=-100, right_speed=100)
+motor_pair.move_tank(1, 'rotations', left_speed=-100, right_speed=-100)

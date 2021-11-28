@@ -173,6 +173,7 @@ class Motor:
         self.servo.duty(duty)
         time.sleep_ms(int(timer))
         self.servo.duty(0)
+        time.sleep_ms(40)
         
     def run_to_degrees_counted(self,degrees, speed=None):
         if(self.ISDEBUG):print("Motor->run_to_degrees_counted(degrees=",str(degrees),", speed=",str(speed),"). Runs the motor until the number of degrees counted is equal to the value. ")
@@ -188,6 +189,7 @@ class Motor:
         self.servo.duty(duty)
         time.sleep_ms(int(timer))
         self.servo.duty(0)
+        time.sleep_ms(40)
     
     def run_for_degrees(self,degrees, speed=None):
         if(self.ISDEBUG):print("Motor->run_for_degrees(degrees=",str(degrees),", speed=",str(speed),"). Runs the motor for a specified number of degrees.")
@@ -203,6 +205,7 @@ class Motor:
         self.servo.duty(duty)
         time.sleep_ms(int(timer))
         self.servo.duty(0)
+        time.sleep_ms(40)
 
     def run_for_rotations(self,rotations, speed=None):
         if(self.ISDEBUG):print("Motor->run_for_rotations(rotations=",str(rotations),", speed=",str(speed),"). Runs the motor for a specified number of rotations. ")
@@ -219,6 +222,7 @@ class Motor:
         self.servo.duty(duty)
         time.sleep_ms(int(timer))
         self.servo.duty(0)
+        time.sleep_ms(40)
                
     def run_for_seconds(self,seconds, speed=None):
         if(self.ISDEBUG):print("Motor->run_for_seconds(seconds=",str(seconds),", speed=",str(speed),"). Runs the motor for a specified number of seconds. ")
@@ -234,7 +238,7 @@ class Motor:
         self.servo.duty(duty)
         time.sleep_ms(int(timer))
         self.servo.duty(0)
-        
+        time.sleep_ms(40)
         
     def get_speed(self):
         if(self.ISDEBUG):print("Motor->get_speed(). Retrieves the motor speed. Stored value:",str(self.speed))

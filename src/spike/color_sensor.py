@@ -165,13 +165,13 @@ class ColorSensor:
                                                              maxvalue= 8,
                                                              minreading=0,
                                                              maxreading=8)
-            if(self.ISDEBUG):print("Do changes at color sensor new reading:", str(self.color_index), " to exit it should be lower then:", self.color_index , " or it should be higher then:", self.color_index )
-            if self.color_index > old_color_index or self.color_index < old_color_index:
+            if(self.ISDEBUG):print("Do changes at color sensor new reading:", self.colors_array[self.color_index], " to exit it should different then:", self.colors_array[old_color_index] )
+            if not self.color_index == old_color_index:
                 runwhile = False
             else:
                 time.sleep_ms(500)
             old_color_index = self.color_index
-        return self.colors_array[self.color_index]
+        return self.colors_array[self.color_index] 
     
     def wait_until_color(self,color):
         if color == 'black':
@@ -202,7 +202,7 @@ class ColorSensor:
                                                              maxvalue= 8,
                                                              minreading=0,
                                                              maxreading=8)
-            if(self.ISDEBUG):print("Do changes at color sensor new reading:", str(self.color_index), " to exit it should be higher or equal then:", old_color_index , " or it should be lower or equal then:", old_color_index )
+            if(self.ISDEBUG):print("Do changes at color sensor new reading:", self.colors_array[self.color_index], " to exit it should be the same as:", self.colors_array[old_color_index] )
             if self.color_index == old_color_index: 
                 runwhile = False
             else:

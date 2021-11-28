@@ -11,12 +11,3 @@ while count < 5:
 	motor.stop()
 	count = count + 1
 	print('counta', str(count))
-
-# Move your hand slowly toward and then away from the Distance Sensor, the motor speed will change based on the detected distance 
-count = 0
-while count < 5:
-	percentage = distance_sensor.get_distance_percentage()
-	if percentage is not None:
-		motor.start(100 - percentage)
-	count = count + 1
-	print('countb', str(count))
