@@ -69,8 +69,7 @@ class Motor:
                      old_absolute_position=0,
                      run_time_period = 0,
                      speed=None,
-                     default_speed=100,
-                     servo=None):
+                     default_speed=100):
         #servo clockwise speed min. 85  max 5 counterclockwise speed min. 95 max 180
         #calculation for clockwise timer=degree*(0.9*speed**2-170*speed+8600)/360 
         #Values:"shortest path" could run in either direction, depending on the shortest distance to the target.
@@ -79,42 +78,53 @@ class Motor:
         duty = 0
         if speed == None:
             speed = default_speed
-
-        if speed == 0:
-            duty = 0
+        isclockwise = True
+        absspeed = speed
+        absturn = relative_turn
+        if speed > 0:
+            if relative_turn > 0:
+                isclockwise = True
+            else:
+                isclockwise = False
+                absturn = -absturn 
+        else:
+            absspeed = -absspeed
+            if relative_turn > 0:
+                isclockwise = False
+            else:
+                isclockwise = True
+                absturn = -absturn 
             
-        if not run_time_period == 0:
-            relative_turn = run_time_period*1000 / ((0.9*speed**2-170*speed+8600)/360) 
-            if speed < 0:
-                relative_turn = relative_turn * -1
-        
-        new_absolute_position = old_absolute_position + relative_turn % 360
-        
-        if relative_turn > 0:
-            duty = 100 - int(speed)
+        if isclockwise:       
+            duty = 100 - int(absspeed)
             if duty < 2:
                 duty = 2
-            #different calculation for different directio
-            timer=relative_turn*(0.9*speed**2-170*speed+8600)/360
+            timer=absturn*(0.9*absspeed**2-170*absspeed+8600)/360 
         else:
-            duty = 80 + speed
-            timer=relative_turn*(1.19*speed**2-45.8*speed+4375)/360
-            
+            duty = 80 + absspeed
+            timer=absturn*(1.19*absspeed**2-45.8*absspeed+4375)/360
+        
+        
+        if speed == 0:
+            duty = 0
+        
+        if not run_time_period == 0:
+            timer = int(run_time_period*1000)
+            relative_turn = absturn*1000 / ((0.9*absspeed**2-170*absspeed+8600)/360) 
+            if speed < 0:
+                relative_turn = relative_turn * -1
+                
+        new_absolute_position = old_absolute_position + relative_turn % 360
         if new_absolute_position < 0:
             new_absolute_position = new_absolute_position + 360
+        
         if(isdebug):print("relative turn:",str(relative_turn),
                           " old absolute position:",str(old_absolute_position),
                           " new absolute position:",str(new_absolute_position),
                           " speed:",str(speed),
                           " duty:",str(duty),
-                          " timer:",str(timer))
-        servo.duty(duty)
-        if run_time_period == 0:
-            time.sleep_ms(int(timer))
-        else:
-            time.sleep_ms(int(run_time_period*1000))
-        servo.duty(0)
-        return new_absolute_position
+                          " timer:",str(timer))    
+        return new_absolute_position,timer, duty
         
                      
 
@@ -153,40 +163,46 @@ class Motor:
                 relative_turn = degrees-self.position
         if degrees == self.position:
             relative_turn = 0
-        self.position = self.handel_servo(
+        self.position,timer,duty = self.handel_servo(
                      isdebug=self.ISDEBUG,
                      relative_turn = relative_turn,
                      old_absolute_position =self.position,
                      run_time_period = 0,
                      speed=self.speed,
-                     default_speed=self.default_speed,
-                     servo=self.servo)
+                     default_speed=self.default_speed)
+        self.servo.duty(duty)
+        time.sleep_ms(int(timer))
+        self.servo.duty(0)
         
     def run_to_degrees_counted(self,degrees, speed=None):
         if(self.ISDEBUG):print("Motor->run_to_degrees_counted(degrees=",str(degrees),", speed=",str(speed),"). Runs the motor until the number of degrees counted is equal to the value. ")
         self.degrees = degrees
         self.speed = speed
-        self.position = self.handel_servo(
+        self.position,timer,duty = self.handel_servo(
                      isdebug=self.ISDEBUG,
                      relative_turn = degrees,
                      old_absolute_position =self.position,
                      run_time_period = 0,
                      speed=self.speed,
-                     default_speed=self.default_speed,
-                     servo=self.servo)
+                     default_speed=self.default_speed)
+        self.servo.duty(duty)
+        time.sleep_ms(int(timer))
+        self.servo.duty(0)
     
     def run_for_degrees(self,degrees, speed=None):
         if(self.ISDEBUG):print("Motor->run_for_degrees(degrees=",str(degrees),", speed=",str(speed),"). Runs the motor for a specified number of degrees.")
         self.degrees = degrees
         self.speed = speed
-        self.position = self.handel_servo(
+        self.position,timer,duty = self.handel_servo(
                      isdebug=self.ISDEBUG,
                      relative_turn = degrees,
                      old_absolute_position =self.position,
                      run_time_period = 0,
                      speed=self.speed,
-                     default_speed=self.default_speed,
-                     servo=self.servo)
+                     default_speed=self.default_speed)
+        self.servo.duty(duty)
+        time.sleep_ms(int(timer))
+        self.servo.duty(0)
 
     def run_for_rotations(self,rotations, speed=None):
         if(self.ISDEBUG):print("Motor->run_for_rotations(rotations=",str(rotations),", speed=",str(speed),"). Runs the motor for a specified number of rotations. ")
