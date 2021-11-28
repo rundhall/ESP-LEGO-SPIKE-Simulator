@@ -13,8 +13,8 @@ class MotorPair:
     #pwm frequency usually 50 Hz is working for servo motors, possible range 30...100.
     MOTOR_PWM_FREQUENCY = 50
     
-    CM_TO_DEGREE = 20
-    IN_TO_DEGREE = 48
+    CM_TO_DEGREE = 40
+    IN_TO_DEGREE = 96
     
     def __init__(self,port1,port2):
         self.port1 = port1
@@ -99,58 +99,49 @@ class MotorPair:
         duty1 = 0
         if speed1 == None:
             speed1 = default_speed
-        else:
-            speed1 = speed1
         
         duty2 = 0
         if speed2 == None:
             speed2 = default_speed
-        else:
-            speed2 = speed2
         
-        if speed1>speed2:
-            maxspeed = speed1
-        else:
-            maxspeed = speed2
-        
-        if not run_time_period == 0:
-            if relative_turn > 0:
-                relative_turn = run_time_period*1000 / ((0.9*maxspeed**2-170*maxspeed+8600)/360)
-            else:
-                relative_turn = run_time_period*1000 / ((1.19*maxspeed**2-45.8*maxspeed+4375)/360)
-            if speed1 < 0:
-                relative_turn = relative_turn * -1
-        
-        
-        if relative_turn > 0:
+        if speed1 > 0:
             duty1 = 100 - int(speed1)
             if duty1 < 2:
                 duty1 = 2
+            timer1=relative_turn*(0.9*speed1**2-170*speed1+8600)/360 
+        else:
+            duty1 = 80 - speed1
+            timer1=relative_turn*(1.19*speed1**2-45.8*speed1+4375)/360
+        
+        if speed2 > 0:
             duty2 = 100 - int(speed2)
             if duty2 < 2:
                 duty2 = 2
             #different calculation for different direction
-            timer=abs(relative_turn*(0.9*maxspeed**2-170*maxspeed+8600)/360) 
+            timer2=relative_turn*(0.9*speed2**2-170*speed2+8600)/360 
         else:
-            duty1 = 80 + speed1
-            duty2 = 80 + speed2
-            timer=abs(relative_turn*(1.19*maxspeed**2-45.8*maxspeed+4375)/360)
+            duty2 = 80 - speed2
+            timer2=relative_turn*(1.19*speed2**2-45.8*speed2+4375)/360
         
-       
+        if speed2 == 0:
+            duty2 = 0
+            
+        if speed1 == 0:
+            duty1 = 0
+            
+        if not run_time_period == 0:
+            timer1 = int(run_time_period*1000)
+            timer2 = int(run_time_period*1000)
+            
         if(isdebug):print("relative turn:",str(relative_turn),
                           " speed1:",str(speed1),
                           " duty1:",str(duty1),
                           " speed2:",str(speed2),
                           " duty2:",str(duty2),
-                          " timer:",str(timer))
-        servo1.duty(duty1)
-        servo2.duty(duty2)
-        if run_time_period == 0:
-            time.sleep_ms(int(timer))
-        else:
-            time.sleep_ms(int(run_time_period*1000))
-        servo1.duty(0)
-        servo2.duty(0)
+                          " timer1:",str(timer1),
+                          " timer2:",str(timer2))
+        
+        return timer1, timer2, duty1, duty2
         
     def start_tank(self,left_speed, right_speed):
         if(self.ISDEBUG):print("motor_pair->start_tank(left_speed=",left_speed,", right_speed=",right_speed,"). Starts moving the Driving Base using differential (tank) steering.")
@@ -159,14 +150,14 @@ class MotorPair:
             if duty1 < 2:
                 duty1 = 2
         else:
-            duty1 = 80 + abs(left_speed)  
+            duty1 = 80 - left_speed  
         self.servo1.duty(duty1)
         if right_speed > 0:
             duty2 = 100 - int(right_speed)
             if duty2 < 2:
                 duty2 = 2
         else:
-            duty2 = 80 + abs(right_speed)        
+            duty2 = 80 - right_speed      
         self.servo2.duty(duty2)
     
     
@@ -177,14 +168,14 @@ class MotorPair:
             if duty1 < 2:
                 duty1 = 2
         else:
-            duty1 = 80 + abs(left_power)
+            duty1 = 80 - left_power
         self.servo1.duty(duty1)
         if right_power > 0:
             duty2 = 100 - int(right_power)
             if duty2 < 2:
                 duty2 = 2
         else:
-            duty2 = 80 + abs(right_power)        
+            duty2 = 80 - right_power      
         self.servo2.duty(duty2)
  
     def get_default_speed (self):
@@ -221,10 +212,10 @@ class MotorPair:
             power = self.default_speed
           
         if steering>0:
-            speed1 = power - int(abs(steering)*power/100)
+            speed1 = power - int(steering*power/100)
             speed2= power
         else:
-            speed2 = power - int(abs(steering)*power/100)
+            speed2 = power - int(-steering*power/100)
             speed1= power
         
         duty1 = 0
@@ -255,7 +246,7 @@ class MotorPair:
         
 
     def move(self,amount, unit='cm', steering=0, speed=None):
-        if(self.ISDEBUG):print("Start both motors simultaneously to move a Driving Base.")
+        if(self.ISDEBUG):print("motor_pair->move(amount=",str(amount),",unit=",str(unit),",steering=",str(steering),"speed=",str(speed),"). Start both motors simultaneously to move a Driving Base.")
         turn = 0
         run_time = 0
         if unit == "cm":
@@ -269,29 +260,37 @@ class MotorPair:
         if unit == "seconds":
             turn = 0
             run_time = amount
-        
+
         if speed == None:
-            self.speed = self.default_speed
-        else:
-            if speed < 0:
-                turn = turn * (-1)
-            self.speed = speed
-          
+            speed = self.default_speed
+            
         if steering>0:
-            speed1 = self.speed - int(abs(steering)*self.speed/100)
-            speed2= self.speed
+            speed1 = speed - int(steering*speed/100)
+            speed2= speed
         else:
-            speed2 = self.speed - int(abs(steering)*self.speed/100)
-            speed1= self.speed
+            speed2 = speed - int(-steering*speed/100)
+            speed1= speed
         
-        self.handel_servo(self.ISDEBUG,
+        timer1, timer2, duty1, duty2 = self.handel_servo(self.ISDEBUG,
                      relative_turn=turn,
                      run_time_period = run_time,
                      speed1=speed1,
                      speed2=speed2,
-                     default_speed=self.default_speed,
-                     servo1=self.servo1,
-                     servo2=self.servo2)
+                     default_speed=self.default_speed)
+        if(self.ISDEBUG):print(timer1, timer2, duty1, duty2)
+        self.servo1.duty(duty1)
+        self.servo2.duty(duty2)
+        if(timer1<timer2):
+            time.sleep_ms(int(timer1))
+            self.servo1.duty(0)
+            time.sleep_ms(int(timer2-timer1))
+            self.servo2.duty(0)
+        else:
+            time.sleep_ms(int(timer2))
+            self.servo2.duty(0)
+            time.sleep_ms(int(timer1-timer2))
+            self.servo1.duty(0)
+        time.sleep_ms(50)
         
     def move_tank(self,amount, unit='cm', left_speed=None, right_speed=None):
         if(self.ISDEBUG):print("motor_pair->move_tank(amount=",str(amount),", unit=",str(unit),", left_speed=",str(left_speed),", right_speed=",str(right_speed),"). Moves the Driving Base using differential (tank) steering.")
@@ -309,23 +308,23 @@ class MotorPair:
             turn = 0
             run_time = amount
         
-        if left_speed == None:
-            left_speed = self.default_speed
-        else:
-            if left_speed < 0:
-                left_speed = left_speed * (-1)
-        
-        if right_speed == None:
-            right_speed = self.default_speed
-        else:
-            if right_speed < 0:
-                right_speed = right_speed * (-1)
-        
-        self.handel_servo(self.ISDEBUG,
+        timer1, timer2, duty1, duty2 = self.handel_servo(self.ISDEBUG,
                      relative_turn=turn,
                      run_time_period = run_time,
                      speed1=left_speed,
                      speed2=right_speed,
-                     default_speed=self.default_speed,
-                     servo1=self.servo1,
-                     servo2=self.servo2)
+                     default_speed=self.default_speed)
+        if(self.ISDEBUG):print(timer1, timer2, duty1, duty2)
+        self.servo1.duty(duty1)
+        self.servo2.duty(duty2)
+        if(timer1<timer2):
+            time.sleep_ms(int(timer1))
+            self.servo1.duty(0)
+            time.sleep_ms(int(timer2-timer1))
+            self.servo2.duty(0)
+        else:
+            time.sleep_ms(int(timer2))
+            self.servo2.duty(0)
+            time.sleep_ms(int(timer1-timer2))
+            self.servo1.duty(0)
+        time.sleep_ms(50)

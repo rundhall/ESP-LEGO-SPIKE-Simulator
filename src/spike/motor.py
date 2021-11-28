@@ -79,8 +79,7 @@ class Motor:
         duty = 0
         if speed == None:
             speed = default_speed
-        else:
-            speed = speed
+
         if speed == 0:
             duty = 0
             
@@ -95,11 +94,11 @@ class Motor:
             duty = 100 - int(speed)
             if duty < 2:
                 duty = 2
-            #different calculation for different direction
-            timer=abs(relative_turn*(0.9*speed**2-170*speed+8600)/360) 
+            #different calculation for different directio
+            timer=relative_turn*(0.9*speed**2-170*speed+8600)/360
         else:
             duty = 80 + speed
-            timer=abs(relative_turn*(1.19*speed**2-45.8*speed+4375)/360)
+            timer=relative_turn*(1.19*speed**2-45.8*speed+4375)/360
             
         if new_absolute_position < 0:
             new_absolute_position = new_absolute_position + 360
@@ -263,10 +262,11 @@ class Motor:
         
         if power > 0:
             isclockwise = True
+            self.speed = power
         else:
             isclockwise = False
+            self.speed = -power
         duty = 0
-        self.speed = abs(power)
         if isclockwise:
             duty = 100 - int(self.speed)
             if duty < 2:
